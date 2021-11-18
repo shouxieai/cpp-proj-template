@@ -1,3 +1,7 @@
+# proj
+/objs
+/workspace/pro
+
 # Prerequisites
 *.d
 
