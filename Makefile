@@ -35,13 +35,13 @@ lean_cuda      := /data/sxai/lean/cuda-10.2
 lean_opencv    := /data/sxai/lean/opencv4.2.0
 
 include_paths := \
-	src                             \
-	$(lean_opencv)/include/opencv4  \
-	$(lean_cuda)/include
+    src                             \
+    $(lean_opencv)/include/opencv4  \
+    $(lean_cuda)/include
 
 library_paths := \
-	$(lean_opencv)/lib  \
-	$(lean_cuda)/lib64
+    $(lean_opencv)/lib  \
+    $(lean_cuda)/lib64
 
 # 把库路径和头文件路径拼接起来成一个，批量自动加-I、-L、-l
 run_paths     := $(foreach item,$(library_paths),-Wl,-rpath=$(item))
@@ -52,14 +52,14 @@ link_librarys := $(foreach item,$(link_librarys),-l$(item))
 # 如果是其他显卡，请修改-gencode=arch=compute_75,code=sm_75为对应显卡的能力
 # 显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
 # 如果是 jetson nano，提示找不到-m64指令，请删掉 -m64选项。不影响结果
-cuda_arch_code := -gencode=arch=compute_75,code=sm_75
+cuda_arch_code    := -gencode=arch=compute_75,code=sm_75
 cpp_compile_flags := -std=$(stdcpp) -w -g -O0 -m64 -fPIC -fopenmp -pthread $(defined)
 cu_compile_flags  := -std=$(stdcpp) -w -g -O0 -m64 $(cuda_arch_code) -Xcompiler "$(cpp_compile_flags)" $(defined)
 link_flags        := -pthread -fopenmp -Wl,-rpath='$$ORIGIN'
 
 cpp_compile_flags += $(include_paths)
 cu_compile_flags  += $(include_paths)
-link_flags 		  += $(library_paths) $(link_librarys) $(run_paths)
+link_flags        += $(library_paths) $(link_librarys) $(run_paths)
 
 # 如果头文件修改了，这里的指令可以让他自动编译依赖的cpp或者cu文件
 ifneq ($(MAKECMDGOALS), clean)
@@ -90,7 +90,7 @@ $(objdir)/%.mk : $(srcdir)/%.cpp
 	@echo Compile depends CXX $<
 	@mkdir -p $(dir $@)
 	@g++ -M $< -MF $@ -MT $(@:.mk=.o) $(cpp_compile_flags)
-	
+    
 $(objdir)/%.cumk : $(srcdir)/%.cu
 	@echo Compile depends CUDA $<
 	@mkdir -p $(dir $@)
