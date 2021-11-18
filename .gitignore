@@ -1,6 +1,7 @@
 # proj
 /objs
 /workspace/pro
+/workspace/image.jpg
 
 # Prerequisites
 *.d
