@@ -11,6 +11,8 @@ int main(){
     printf("image.rows = %d, image.cols = %d, image.channels = %d\n", image.rows, image.cols, image.channels());
     printf("Save to %s/image.jpg\n", getenv("workdir"));
     printf("Env srcdir = %s, pwd = %s\n", getenv("srcdir"), getenv("pwd"));
+
+    // PROD由makefile编译时指定的宏，同时为了语法解析正常，需要在.vscode/c_cpp_properties.json:defines里面定义
     printf("Macro PROD = " PROD "\n");
 
     float* ptr = nullptr;

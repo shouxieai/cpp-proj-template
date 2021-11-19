@@ -1,12 +1,13 @@
-cc       := g++
-nvcc     := nvcc
-name     := pro
-workdir  := workspace
-srcdir   := src
-objdir   := objs
-defined  := -DPROD=\"sxai\"
-stdcpp   := c++11
-pwd      := $(abspath .)
+cc        := g++
+nvcc      := nvcc
+name      := pro
+workdir   := workspace
+srcdir    := src
+objdir    := objs
+defined   := -DPROD=\"sxai\"
+stdcpp    := c++11
+pwd       := $(abspath .)
+cuda_arch := -gencode=arch=compute_75,code=sm_75
 
 # 导出你的环境变量值，可以在程序中使用，该功能还可以写成例如：
 # export LD_LIBRARY_PATH=xxxxx，作用与你在终端中设置是一样的
@@ -34,11 +35,14 @@ link_librarys  := $(link_opencv) $(link_cuda) $(link_sys)
 lean_cuda      := /data/sxai/lean/cuda-10.2
 lean_opencv    := /data/sxai/lean/opencv4.2.0
 
+# 定义头文件路径，请注意斜杠后边不能有空格
+# 只需要写路径，不需要写-I
 include_paths := \
     src                             \
     $(lean_opencv)/include/opencv4  \
     $(lean_cuda)/include
 
+# 定义库文件路径，只需要写路径，不需要写-L
 library_paths := \
     $(lean_opencv)/lib  \
     $(lean_cuda)/lib64
@@ -52,9 +56,8 @@ link_librarys := $(foreach item,$(link_librarys),-l$(item))
 # 如果是其他显卡，请修改-gencode=arch=compute_75,code=sm_75为对应显卡的能力
 # 显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
 # 如果是 jetson nano，提示找不到-m64指令，请删掉 -m64选项。不影响结果
-cuda_arch_code    := -gencode=arch=compute_75,code=sm_75
 cpp_compile_flags := -std=$(stdcpp) -w -g -O0 -m64 -fPIC -fopenmp -pthread $(defined)
-cu_compile_flags  := -std=$(stdcpp) -w -g -O0 -m64 $(cuda_arch_code) -Xcompiler "$(cpp_compile_flags)" $(defined)
+cu_compile_flags  := -std=$(stdcpp) -w -g -O0 -m64 $(cuda_arch) -Xcompiler "$(cpp_compile_flags)" $(defined)
 link_flags        := -pthread -fopenmp -Wl,-rpath='$$ORIGIN'
 
 cpp_compile_flags += $(include_paths)
@@ -74,29 +77,33 @@ run       : $(name)
 $(workdir)/$(name) : $(cpp_objs) $(cu_objs)
 	@echo Link $@
 	@mkdir -p $(dir $@)
-	@g++ $^ -o $@ $(link_flags)
+	@$(cc) $^ -o $@ $(link_flags)
 
 $(objdir)/%.o : $(srcdir)/%.cpp
 	@echo Compile CXX $<
 	@mkdir -p $(dir $@)
-	@g++ -c $< -o $@ $(cpp_compile_flags)
+	@$(cc) -c $< -o $@ $(cpp_compile_flags)
 
 $(objdir)/%.cuo : $(srcdir)/%.cu
 	@echo Compile CUDA $<
 	@mkdir -p $(dir $@)
-	@nvcc -c $< -o $@ $(cu_compile_flags)
+	@$(nvcc) -c $< -o $@ $(cu_compile_flags)
 
+# 编译cpp依赖项，生成mk文件
 $(objdir)/%.mk : $(srcdir)/%.cpp
 	@echo Compile depends CXX $<
 	@mkdir -p $(dir $@)
-	@g++ -M $< -MF $@ -MT $(@:.mk=.o) $(cpp_compile_flags)
+	@$(cc) -M $< -MF $@ -MT $(@:.mk=.o) $(cpp_compile_flags)
     
+# 编译cu文件的依赖项，生成cumk文件
 $(objdir)/%.cumk : $(srcdir)/%.cu
 	@echo Compile depends CUDA $<
 	@mkdir -p $(dir $@)
-	@nvcc -M $< -MF $@ -MT $(@:.cumk=.o) $(cu_compile_flags)
+	@$(nvcc) -M $< -MF $@ -MT $(@:.cumk=.o) $(cu_compile_flags)
 
+# 定义清理指令
 clean :
 	@rm -rf $(objdir) $(workdir)/$(name)
 
-.PHONY : clean $(name) run
+# 防止符号被当做文件
+.PHONY : clean run $(name)
