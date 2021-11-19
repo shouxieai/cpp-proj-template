@@ -4,7 +4,7 @@ name      := pro
 workdir   := workspace
 srcdir    := src
 objdir    := objs
-defined   := -DPROD=\"sxai\"
+defined   := PROD=\"sxai\"
 stdcpp    := c++11
 pwd       := $(abspath .)
 cuda_arch := -gencode=arch=compute_75,code=sm_75
@@ -47,11 +47,17 @@ library_paths := \
     $(lean_opencv)/lib  \
     $(lean_cuda)/lib64
 
+# 把library path给拼接为一个字符串，例如a b c => a:b:c
+# 然后使得LD_LIBRARY_PATH=a:b:c
+empty := 
+library_path_export := $(subst $(empty) $(empty),:,$(library_paths))
+
 # 把库路径和头文件路径拼接起来成一个，批量自动加-I、-L、-l
 run_paths     := $(foreach item,$(library_paths),-Wl,-rpath=$(item))
 include_paths := $(foreach item,$(include_paths),-I$(item))
 library_paths := $(foreach item,$(library_paths),-L$(item))
 link_librarys := $(foreach item,$(link_librarys),-l$(item))
+defined       := $(foreach item,$(defined),-D$(item))
 
 # 如果是其他显卡，请修改-gencode=arch=compute_75,code=sm_75为对应显卡的能力
 # 显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
@@ -107,3 +113,6 @@ clean :
 
 # 防止符号被当做文件
 .PHONY : clean run $(name)
+
+# 导出依赖库路径，使得能够运行起来
+export LD_LIBRARY_PATH:=$(LD_LIBRARY_PATH):$(library_path_export)
