@@ -16,15 +16,15 @@ export workdir srcdir objdir pwd
 
 # 定义cpp的路径查找和依赖项mk文件
 cpp_srcs := $(shell find $(srcdir) -name "*.cpp")
-cpp_objs := $(cpp_srcs:.cpp=.o)
+cpp_objs := $(cpp_srcs:.cpp=.cpp.o)
 cpp_objs := $(cpp_objs:$(srcdir)/%=$(objdir)/%)
-cpp_mk   := $(cpp_objs:.o=.mk)
+cpp_mk   := $(cpp_objs:.cpp.o=.cpp.mk)
 
 # 定义cu文件的路径查找和依赖项mk文件
 cu_srcs := $(shell find $(srcdir) -name "*.cu")
-cu_objs := $(cu_srcs:.cu=.cuo)
+cu_objs := $(cu_srcs:.cu=.cu.o)
 cu_objs := $(cu_objs:$(srcdir)/%=$(objdir)/%)
-cu_mk   := $(cu_objs:.cuo=.cumk)
+cu_mk   := $(cu_objs:.cu.o=.cu.mk)
 
 # 定义opencv和cuda需要用到的库文件
 link_opencv    := opencv_core opencv_imgproc opencv_videoio opencv_imgcodecs
@@ -87,27 +87,27 @@ $(workdir)/$(name) : $(cpp_objs) $(cu_objs)
 	@mkdir -p $(dir $@)
 	@$(cc) $^ -o $@ $(link_flags)
 
-$(objdir)/%.o : $(srcdir)/%.cpp
+$(objdir)/%.cpp.o : $(srcdir)/%.cpp
 	@echo Compile CXX $<
 	@mkdir -p $(dir $@)
 	@$(cc) -c $< -o $@ $(cpp_compile_flags)
 
-$(objdir)/%.cuo : $(srcdir)/%.cu
+$(objdir)/%.cu.o : $(srcdir)/%.cu
 	@echo Compile CUDA $<
 	@mkdir -p $(dir $@)
 	@$(nvcc) -c $< -o $@ $(cu_compile_flags)
 
 # 编译cpp依赖项，生成mk文件
-$(objdir)/%.mk : $(srcdir)/%.cpp
-	@echo Compile depends CXX $<
+$(objdir)/%.cpp.mk : $(srcdir)/%.cpp
+	@echo Compile depends C++ $<
 	@mkdir -p $(dir $@)
-	@$(cc) -M $< -MF $@ -MT $(@:.mk=.o) $(cpp_compile_flags)
+	@$(cc) -M $< -MF $@ -MT $(@:.cpp.mk=.cpp.o) $(cpp_compile_flags)
     
 # 编译cu文件的依赖项，生成cumk文件
-$(objdir)/%.cumk : $(srcdir)/%.cu
+$(objdir)/%.cu.mk : $(srcdir)/%.cu
 	@echo Compile depends CUDA $<
 	@mkdir -p $(dir $@)
-	@$(nvcc) -M $< -MF $@ -MT $(@:.cumk=.o) $(cu_compile_flags)
+	@$(nvcc) -M $< -MF $@ -MT $(@:.cu.mk=.cu.o) $(cu_compile_flags)
 
 # 定义清理指令
 clean :

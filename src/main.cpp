@@ -2,6 +2,7 @@
 #include <opencv2/opencv.hpp>
 #include <cuda_runtime.h>
 #include <stdio.h>
+#include "main.hpp"
 
 int main(){
 
