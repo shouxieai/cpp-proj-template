@@ -8,6 +8,7 @@ defined   := PROD=\"sxai\"
 stdcpp    := c++11
 pwd       := $(abspath .)
 cuda_arch := -gencode=arch=compute_75,code=sm_75
+run_args  := 
 
 # 导出你的环境变量值，可以在程序中使用，该功能还可以写成例如：
 # export LD_LIBRARY_PATH=xxxxx，作用与你在终端中设置是一样的
@@ -77,8 +78,9 @@ endif
 
 $(name)   : $(workdir)/$(name)
 
+all       : $(name)
 run       : $(name)
-	@cd $(workdir) && ./$(name)
+	@cd $(workdir) && ./$(name) $(run_args)
 
 $(workdir)/$(name) : $(cpp_objs) $(cu_objs)
 	@echo Link $@
